@@ -59,7 +59,7 @@ const Login = () => {
 
              {/* Forgot password link */}
             <div className="mb-3 text-end">
-              <Link to="/forget-password">Forgot Password?</Link>
+              <Link to="/user/changePassword">Forgot Password?</Link>
             </div>
 
 

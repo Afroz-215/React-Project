@@ -9,7 +9,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/forget-password" element={<ForgetPassword />} /> {/* ✅ route added */}
+      <Route path="/user/changePassword" element={<ForgetPassword />} /> {/* ✅ route added */}
     </Routes>
   );
 }

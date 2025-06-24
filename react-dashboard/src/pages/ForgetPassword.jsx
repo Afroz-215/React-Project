@@ -5,21 +5,20 @@ import api from '../services/api';
 
 const ForgetPassword = () => {
   const [emailSent, setEmailSent] = useState(false);
-  const [resetToken, setResetToken] = useState('');
+  const [email, setEmail] = useState(''); // ✅ Store user email
 
   // ✅ Screen 1 - Email Form Validation
   const emailSchema = Yup.object().shape({
     email: Yup.string().email('Invalid email').required('Required'),
   });
 
-  // ✅ Submit Email for Reset Link
+  // ✅ Submit Email for Reset Link (we store the email here for later use)
   const handleEmailSubmit = async (values, { setSubmitting }) => {
     try {
-      const res = await api.post('/forgot-password', values);
-      setResetToken(res.data.token || ''); // Only if backend sends token
-      setEmailSent(true);
+      setEmail(values.email); // ✅ Save email
+      setEmailSent(true); // Proceed to password screen
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to send reset link');
+      alert(err.response?.data?.message || 'Failed to proceed');
     } finally {
       setSubmitting(false);
     }
@@ -27,19 +26,27 @@ const ForgetPassword = () => {
 
   // ✅ Screen 2 - Password Reset Form Validation
   const passwordSchema = Yup.object().shape({
-    password: Yup.string().min(6, 'Too short!').required('Required'),
+    currentPassword: Yup.string().required('Required'),
+    newPassword: Yup.string()
+      .matches(/[A-Z]/, 'Must contain at least one uppercase letter')
+      .min(8, 'At least 8 characters')
+      .required('Required'),
     confirmPassword: Yup.string()
-      .oneOf([Yup.ref('password')], 'Passwords must match')
+      .oneOf([Yup.ref('newPassword')], 'Passwords must match')
       .required('Required'),
   });
 
   // ✅ Submit New Password
   const handleResetPassword = async (values, { setSubmitting }) => {
     try {
-      await api.post('/reset-password', {
-        token: resetToken,
-        password: values.password,
-      });
+      const payload = {
+        email: email, // ✅ 
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword,
+        confirmPassword: values.confirmPassword,
+      };
+
+      await api.put('/user/changePassword', payload);
       alert('Password reset successful');
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to reset password');
@@ -74,25 +81,33 @@ const ForgetPassword = () => {
         </Formik>
       ) : (
         <Formik
-          initialValues={{ password: '', confirmPassword: '' }}
+          initialValues={{ currentPassword: '', newPassword: '', confirmPassword: '' }}
           validationSchema={passwordSchema}
           onSubmit={handleResetPassword}
         >
           {({ isSubmitting }) => (
             <Form>
+
+              
               <div className="mb-3">
-                <label htmlFor="password">New Password</label>
-                <Field type="password" name="password" className="form-control" />
-                <ErrorMessage name="password" component="div" className="text-danger" />
+                <label>Current Password</label>
+                <Field type="password" name="currentPassword" className="form-control" />
+                <ErrorMessage name="currentPassword" component="div" className="text-danger" />
               </div>
 
               <div className="mb-3">
-                <label htmlFor="confirmPassword">Confirm New Password</label>
+                <label>New Password</label>
+                <Field type="password" name="newPassword" className="form-control" />
+                <ErrorMessage name="newPassword" component="div" className="text-danger" />
+              </div>
+
+              <div className="mb-3">
+                <label>Confirm New Password</label>
                 <Field type="password" name="confirmPassword" className="form-control" />
                 <ErrorMessage name="confirmPassword" component="div" className="text-danger" />
               </div>
 
-              <button type="submit" className="btn btn-success" disabled={isSubmitting}>
+              <button type="submit" className="btn btn-success" >
                 {isSubmitting ? 'Resetting...' : 'Reset Password'}
               </button>
             </Form>
