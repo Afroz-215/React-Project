@@ -5,26 +5,12 @@ import api from '../services/api';
 
 const ForgetPassword = () => {
   const [emailSent, setEmailSent] = useState(false);
-  const [email, setEmail] = useState(''); // ✅ Store user email
+  const [email, setEmail] = useState('');
 
-  // ✅ Screen 1 - Email Form Validation
   const emailSchema = Yup.object().shape({
     email: Yup.string().email('Invalid email').required('Required'),
   });
 
-  // ✅ Submit Email for Reset Link (we store the email here for later use)
-  const handleEmailSubmit = async (values, { setSubmitting }) => {
-    try {
-      setEmail(values.email); // ✅ Save email
-      setEmailSent(true); // Proceed to password screen
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to proceed');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // ✅ Screen 2 - Password Reset Form Validation
   const passwordSchema = Yup.object().shape({
     currentPassword: Yup.string().required('Required'),
     newPassword: Yup.string()
@@ -36,17 +22,34 @@ const ForgetPassword = () => {
       .required('Required'),
   });
 
-  // ✅ Submit New Password
+  const handleEmailSubmit = async (values, { setSubmitting }) => {
+    try {
+      setEmail(values.email);
+      setEmailSent(true);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to proceed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleResetPassword = async (values, { setSubmitting }) => {
     try {
+      const token = localStorage.getItem('token');
+
       const payload = {
-        email: email, // ✅ 
+        email,
         currentPassword: values.currentPassword,
         newPassword: values.newPassword,
         confirmPassword: values.confirmPassword,
       };
 
-      await api.put('/user/changePassword', payload);
+      await api.put('/user/changePassword', payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
       alert('Password reset successful');
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to reset password');
@@ -57,7 +60,9 @@ const ForgetPassword = () => {
 
   return (
     <div className="container mt-5">
-      <h2 className="mb-4">{emailSent ? 'Reset Your Password' : 'Forgot Password'}</h2>
+      <h2 className="mb-4 text-center">
+        {emailSent ? 'Reset Your Password' : 'Forgot Password'}
+      </h2>
 
       {!emailSent ? (
         <Formik
@@ -69,11 +74,15 @@ const ForgetPassword = () => {
             <Form>
               <div className="mb-3">
                 <label htmlFor="email">Email Address</label>
-                <Field type="email" name="email" className="form-control" />
+                <Field type="email" name="email" id="email" className="form-control" />
                 <ErrorMessage name="email" component="div" className="text-danger" />
               </div>
 
-              <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+              <button
+                type="submit"
+                className="btn btn-primary w-100"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? 'Sending...' : 'Send Reset Link'}
               </button>
             </Form>
@@ -81,33 +90,61 @@ const ForgetPassword = () => {
         </Formik>
       ) : (
         <Formik
-          initialValues={{ currentPassword: '', newPassword: '', confirmPassword: '' }}
+          enableReinitialize
+          initialValues={{
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: '',
+          }}
           validationSchema={passwordSchema}
           onSubmit={handleResetPassword}
         >
-          {({ isSubmitting }) => (
+          {({ isSubmitting, values, handleChange }) => (
             <Form>
-
-              
               <div className="mb-3">
-                <label>Current Password</label>
-                <Field type="password" name="currentPassword" className="form-control" />
+                <label htmlFor="currentPassword">Current Password</label>
+                <Field
+                  type="password"
+                  name="currentPassword"
+                  id="currentPassword"
+                  className="form-control"
+                  value={values.currentPassword}
+                  onChange={handleChange}
+                />
                 <ErrorMessage name="currentPassword" component="div" className="text-danger" />
               </div>
 
               <div className="mb-3">
-                <label>New Password</label>
-                <Field type="password" name="newPassword" className="form-control" />
+                <label htmlFor="newPassword">New Password</label>
+                <Field
+                  type="password"
+                  name="newPassword"
+                  id="newPassword"
+                  className="form-control"
+                  value={values.newPassword}
+                  onChange={handleChange}
+                />
                 <ErrorMessage name="newPassword" component="div" className="text-danger" />
               </div>
 
               <div className="mb-3">
-                <label>Confirm New Password</label>
-                <Field type="password" name="confirmPassword" className="form-control" />
+                <label htmlFor="confirmPassword">Confirm New Password</label>
+                <Field
+                  type="password"
+                  name="confirmPassword"
+                  id="confirmPassword"
+                  className="form-control"
+                  value={values.confirmPassword}
+                  onChange={handleChange}
+                />
                 <ErrorMessage name="confirmPassword" component="div" className="text-danger" />
               </div>
 
-              <button type="submit" className="btn btn-success" >
+              <button
+                type="submit"
+                className="btn btn-success w-100"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? 'Resetting...' : 'Reset Password'}
               </button>
             </Form>

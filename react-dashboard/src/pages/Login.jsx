@@ -13,17 +13,20 @@ const Login = () => {
     email: Yup.string().email('Invalid email').required('Required'),
     password: Yup.string().min(4, 'Too short!').required('Required'),
   });
-
+<div className=""></div>
   //  Submit handler
   const handleLogin = async (values, { setSubmitting, setErrors }) => {
     try {
       console.log('Sending login request with:', values);
       const res = await api.post('/login', values);
       console.log('Login response:', res.data);
+      console.log('res.data.token:', res.data.token);
 
-      // Save token (optional, depends on backend response)
-      if (res.data.token) {
+      if (res.data && res.data.token) {
         localStorage.setItem('token', res.data.token);
+        console.log('Token saved:', res.data.token);
+      } else {
+        console.error('Token not found in response:', res.data);
       }
 
       navigate('/dashboard');
@@ -57,7 +60,7 @@ const Login = () => {
               <ErrorMessage name="password" component="div" className="text-danger" />
             </div>
 
-             {/* Forgot password link */}
+            {/* Forgot password link */}
             <div className="mb-3 text-end">
               <Link to="/user/changePassword">Forgot Password?</Link>
             </div>
