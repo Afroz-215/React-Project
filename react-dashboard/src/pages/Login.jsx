@@ -13,22 +13,19 @@ const Login = () => {
     email: Yup.string().email('Invalid email').required('Required'),
     password: Yup.string().min(4, 'Too short!').required('Required'),
   });
-<div className=""></div>
+
   //  Submit handler
   const handleLogin = async (values, { setSubmitting, setErrors }) => {
     try {
       console.log('Sending login request with:', values);
       const res = await api.post('/login', values);
       console.log('Login response:', res.data);
-      console.log('res.data.token:', res.data.token);
 
-      if (res.data && res.data.token) {
-        localStorage.setItem('token', res.data.token);
-        console.log('Token saved:', res.data.token);
-      } else {
-        console.error('Token not found in response:', res.data);
+      if (res.data && res.data.data) {
+        const user = res.data.data;
+          console.log(' Saved user object:', user);
+        localStorage.setItem('user', JSON.stringify(user));
       }
-
       navigate('/dashboard');
     } catch (err) {
       console.error('Login error:', err.response?.data || err.message);

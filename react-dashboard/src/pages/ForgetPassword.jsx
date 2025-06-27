@@ -34,6 +34,8 @@ const ForgetPassword = () => {
   };
 
   const handleResetPassword = async (values, { setSubmitting }) => {
+    console.log('Token in localStorage for password reset:', localStorage.getItem('token'));
+
     try {
       const token = localStorage.getItem('token');
 
