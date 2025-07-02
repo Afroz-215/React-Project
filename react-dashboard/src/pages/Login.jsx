@@ -23,7 +23,7 @@ const Login = () => {
 
       if (res.data && res.data.data) {
         const user = res.data.data;
-          console.log(' Saved user object:', user);
+        console.log(' Saved user object:', user);
         localStorage.setItem('user', JSON.stringify(user));
       }
       navigate('/dashboard');
@@ -66,6 +66,10 @@ const Login = () => {
             <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
               {isSubmitting ? 'Logging in...' : 'Login'}
             </button>
+
+            <div className="mt-3 text-center">
+              <Link to="/changePassword">Go to Change Password</Link>
+            </div>
           </Form>
         )}
       </Formik>
