@@ -1,59 +1,56 @@
-// src/pages/Product/ProductManager.jsx
 import React, { useEffect, useState } from 'react';
 import { listOfCategories } from '../Category/CategoryService';
-import {
-  addProduct,
-  updateProduct,
-  deleteProduct,
-  listProducts
-} from './ProductService';
+import { listProducts } from './ProductService';
 
 const ProductManager = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({ name: '', price: '', category: '' });
   const [editId, setEditId] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  const LOCAL_KEY = 'local_products';
 
   const fetchProducts = async () => {
     try {
       const res = await listProducts();
-      console.log(" listProducts raw response:", res.data);
-      if (Array.isArray(res.data.data) && res.data.data.length > 0) {
-        setProducts(res.data.data);
-      } else {
-        console.warn('Empty product list, skipping overwrite');
-      }
+      const backendProducts = Array.isArray(res.data.data) ? res.data.data : [];
+      const localData = JSON.parse(localStorage.getItem(LOCAL_KEY)) || [];
+
+      // Combine backend + localStorage, giving priority to local edits
+      const merged = [...backendProducts];
+
+      localData.forEach((localProd) => {
+        const index = merged.findIndex((p) => String(p._id) === String(localProd._id));
+        if (index !== -1) {
+          merged[index] = localProd;
+        } else {
+          merged.push(localProd);
+        }
+      });
+
+      setProducts(merged);
     } catch (err) {
       console.error('Failed to fetch products:', err);
     }
   };
 
-
   const fetchCategories = async () => {
     try {
       const res = await listOfCategories();
-      console.log(" listOfCategories full response:", res.data);
-      const rawCategories = res?.data?.categories || [];
-      console.log(" Raw categories:", rawCategories);
-
-      const formatted = rawCategories.map((cat, i) => ({
+      const raw = res?.data?.categories || [];
+      const formatted = raw.map((cat, i) => ({
         _id: cat._id || cat.id || i,
-        name: cat.category_name || `Category ${i + 1}`,
+        name: cat.name || cat.category_name || `Category ${i + 1}`,
       }));
-
-
-      console.log(" Mapped categories for dropdown:", formatted);
-
       setCategories(formatted);
     } catch (err) {
-      console.error('Failed to fetch categories from listOfCategories:', err);
+      console.error('Failed to fetch categories:', err);
     }
   };
-  useEffect(() => {
-    fetchProducts();
-  }, []);
 
   useEffect(() => {
+    fetchProducts();
     fetchCategories();
   }, []);
 
@@ -61,26 +58,25 @@ const ProductManager = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (editId !== null) {
-    // 🛠 Update existing product in local list
-    setProducts(prev =>
-      prev.map(prod =>
-        prod._id === editId ? { ...prod, ...formData } : prod
-      )
-    );
-  } else {
-    
-    setProducts(prev => [
-      ...prev,
-      { ...formData, _id: Date.now() }
-    ]);
-  }
+    const localData = JSON.parse(localStorage.getItem(LOCAL_KEY)) || [];
 
-  setFormData({ name: '', price: '', category: '' });
-  setEditId(null);
-};
+    if (editId) {
+      const updated = localData.map((p) =>
+        String(p._id) === String(editId) ? { ...formData, _id: editId } : p
+      );
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(updated));
+    } else {
+      const newProduct = { ...formData, _id: Date.now().toString() };
+      localData.push(newProduct);
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(localData));
+    }
+
+    setFormData({ name: '', price: '', category: '' });
+    setEditId(null);
+    fetchProducts();
+  };
 
   const handleEdit = (product) => {
     setFormData({ name: product.name, price: product.price, category: product.category });
@@ -88,9 +84,15 @@ const ProductManager = () => {
   };
 
   const handleDelete = (id) => {
-  setProducts(prev => prev.filter(p => p._id !== id));
-};
+    const localData = JSON.parse(localStorage.getItem(LOCAL_KEY)) || [];
+    const filtered = localData.filter((p) => String(p._id) !== String(id));
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(filtered));
+    fetchProducts();
+  };
 
+  const viewDetails = (product) => {
+    setSelectedProduct(product);
+  };
 
   return (
     <div style={{ padding: '2rem' }}>
@@ -112,9 +114,6 @@ const ProductManager = () => {
           onChange={handleChange}
           required
         />
-        {/* <pre>{JSON.stringify(categories, null, 2)}</pre>
-<pre>{JSON.stringify(products, null, 2)}</pre> */}
-
         <select
           name="category"
           value={formData.category}
@@ -122,39 +121,43 @@ const ProductManager = () => {
           required
         >
           <option value="">Select Category</option>
-          {categories.map((cat, index) => {
-            // console.log(" Rendering category:", cat);
-            return (
-              <option key={cat._id || index} value={cat._id}>
-                {cat.name}
-              </option>
-            );
-          })}
+          {categories.map((cat) => (
+            <option key={cat._id} value={cat._id}>
+              {cat.name}
+            </option>
+          ))}
         </select>
-
         <button type="submit">{editId ? 'Update' : 'Add'} Product</button>
       </form>
 
       <ul>
         {products.map((prod) => {
-          const category = categories.find(
-            (cat) => String(cat._id) === String(prod.category)
-          );
           const catName =
             categories.find((c) => String(c._id) === String(prod.category))?.name || 'Unknown';
 
-
           return (
-
             <li key={prod._id}>
               {prod.name} - ₹{prod.price} (Category: {catName})
               <button onClick={() => handleEdit(prod)}>Edit</button>
               <button onClick={() => handleDelete(prod._id)}>Delete</button>
+              <button onClick={() => viewDetails(prod)}>View</button>
             </li>
           );
         })}
       </ul>
 
+      {selectedProduct && (
+        <div style={{ marginTop: '1rem', border: '1px solid gray', padding: '1rem' }}>
+          <h4>Product Details</h4>
+          <p><strong>Name:</strong> {selectedProduct.name}</p>
+          <p><strong>Price:</strong> ₹{selectedProduct.price}</p>
+          <p>
+            <strong>Category:</strong>{' '}
+            {categories.find((c) => String(c._id) === String(selectedProduct.category))?.name ||
+              'Unknown'}
+          </p>
+        </div>
+      )}
     </div>
   );
 };

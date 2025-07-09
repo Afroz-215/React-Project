@@ -23,6 +23,10 @@ export const listProducts = () => {
   return axios.post(`${BASE_URL}/listOfProducts`);
 };
 
+export const listCategories = () => {
+  return axios.post(`${BASE_URL}/listOfCategories`);
+};
+
 export const productViewForAdmin = (id) => {
   return axios.get(`${BASE_URL}/productViewForAdmin/${id}`);
 };

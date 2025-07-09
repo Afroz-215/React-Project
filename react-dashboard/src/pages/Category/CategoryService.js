@@ -1,195 +1,66 @@
-// import axios from 'axios';
+import axios from 'axios';
 
-// const BASE_URL = 'https://e-commerce-gg46.onrender.com/api/category';
-
-// // export const addCategory = (formData) => {
-// //   return axios.post(`${BASE_URL}/addCategory`, formData, {
-// //     headers: {
-// //       "Content-Type" :'application/json'
-// //     }
-// //   });
-// // };
-
-// export const addCategory = async (formData) => {
-//   console.log("Mocked addCategory called:", formData);
-//   return Promise.resolve({ data: { message: "Mock addCategory success" } });
-// };
-
-// export const updateCategory = (id, formData) => {
-//   return axios.put(`${BASE_URL}/updateCategory/${id}`, formData, {
-//     headers: {
-//       'Content-Type': 'application/json'
-//     }
-//   });
-// };
-
-// export const deleteCategory = (id) => {
-//   return axios.delete(`${BASE_URL}/deleteCategory/${id}`);
-// };
-
-// export const viewCategory = (id) => {
-//   return axios.get(`${BASE_URL}/viewCategory/${id}`);
-// };
-
-// export const listOfCategories = () => {
-//   return axios.post(`${BASE_URL}/listOfCategories`);
-// };
-
-// export const categoryOfProducts = () => {
-//   return axios.post(`${BASE_URL}/categoryOfProducts`);
-// };
-
-// export const categoryDropdown = () => {
-//   return axios.get(`${BASE_URL}/categoryDropdown`);
-// };
-
-
-// CategoryService.js (mock version)
-
-let mockCategories = [
-  { id: 1, name: "Electronics" },
-  { id: 2, name: "Clothing" },
-]; 
-
-export const addCategory = async (formData) => {
-  console.log("Mocked addCategory called:", formData);
-
-  const newCategory = {
-    id: Date.now(), // unique ID
-    name: formData.name,
-  };
-
-  mockCategories.push(newCategory); // add to mock list
-
-  return Promise.resolve({
-    data: {
-      status: "Success",
-      message: "Mock addCategory success",
-      category: newCategory,
-    }
-  });
-};
+const BASE_URL = 'https://e-commerce-gg46.onrender.com/api/category';
 
 export const listOfCategories = async () => {
-  console.log("Mocked listOfCategories called");
+  try {
+    const res = await axios.post(`${BASE_URL}/listOfCategories`);
+    const raw = res?.data?.categories || [];
 
-  return Promise.resolve({
-    data: {
-      statusCode: 200,
-      status: "Success",
-      message: "Mock categories fetched",
-      categories: mockCategories
-    }
-  });
+    const formatted = raw.map((cat, i) => ({
+      id: cat._id || cat.id || i,
+      name: cat.category_name || cat.name || `Category ${i + 1}`,
+      description: cat.description || ''
+    }));
+
+    console.log(' listOfCategories fetched:', formatted);
+    return { data: { categories: formatted } };
+  } catch (err) {
+    console.error('❌ Error fetching categories from backend:', err);
+    return { data: { categories: [] } };
+  }
 };
 
-// Keep real or mock versions of these depending on what works
+
+
+// ✅ REAL dropdown fetch
+export const categoryDropdown = async () => {
+  const res = await axios.get(`${BASE_URL}/categoryDropdown`);
+  const raw = res?.data?.data || [];
+
+  const formatted = raw.map((cat, i) => ({
+    id: cat._id || cat.id || i,
+    name: cat.name?.trim() || `Category ${i + 1}`,
+    description: cat.description || ''
+  }));
+
+  return Promise.resolve({ data: formatted });
+};
+
+// ❌ MOCK only for changes
+let mockCategories = [];
+
+export const addCategory = async (formData) => {
+  const newCat = {
+    id: Date.now(),
+    name: formData.name,
+    description: formData.description || ''
+  };
+  mockCategories.push(newCat);
+  return Promise.resolve({ data: { message: 'Mock added', category: newCat } });
+};
+
 export const updateCategory = async (id, formData) => {
-  mockCategories = mockCategories.map((cat) =>
-    cat.id === id ? { ...cat, name: formData.name } : cat
-  );
-  return Promise.resolve({
-    data: {
-      message: "Mock update success"
-    }
-  });
+  mockCategories = mockCategories.map((c) => (c.id === id ? { ...c, ...formData } : c));
+  return Promise.resolve({ data: { message: 'Mock updated' } });
 };
 
 export const deleteCategory = async (id) => {
-  mockCategories = mockCategories.filter((cat) => cat.id !== id);
-  return Promise.resolve({
-    data: {
-      message: "Mock delete success"
-    }
-  });
+  mockCategories = mockCategories.filter((c) => c.id !== id);
+  return Promise.resolve({ data: { message: 'Mock deleted' } });
 };
 
 export const viewCategory = async (id) => {
-  const cat = mockCategories.find((cat) => cat.id === id);
-  return Promise.resolve({
-    data: cat || { name: "" }
-  });
-};
-
-// You can leave these real or remove them if not needed
-export const categoryOfProducts = () => Promise.resolve({ data: {} });
-export const categoryDropdown = () => Promise.resolve({ data: {} });
-
-// ProductService.js (mock version)
-
-let mockProducts = [
-  {
-    id: 1,
-    name: "Laptop",
-    description: "Powerful gaming laptop",
-    price: 1000,
-    categoryId: 1
-  },
-  {
-    id: 2,
-    name: "T-Shirt",
-    description: "Cotton shirt",
-    price: 20,
-    categoryId: 2
-  }
-];
-
-// ✅ Add Product
-export const addProduct = async (formData) => {
-  const newProduct = {
-    id: Date.now(),
-    ...formData
-  };
-  mockProducts.push(newProduct);
-  return Promise.resolve({
-    data: {
-      message: "Mock addProduct success",
-      product: newProduct
-    }
-  });
-};
-
-// ✅ Update Product
-export const updateProduct = async (id, formData) => {
-  mockProducts = mockProducts.map((prod) =>
-    prod.id === id ? { ...prod, ...formData } : prod
-  );
-  return Promise.resolve({
-    data: { message: "Mock update success" }
-  });
-};
-
-// ✅ Delete Product
-export const deleteProduct = async (id) => {
-  mockProducts = mockProducts.filter((prod) => prod.id !== id);
-  return Promise.resolve({
-    data: { message: "Mock delete success" }
-  });
-};
-
-// ✅ View Product
-export const viewProduct = async (id) => {
-  const product = mockProducts.find((prod) => prod.id === id);
-  return Promise.resolve({
-    data: product || {}
-  });
-};
-
-// ✅ List All Products
-export const listOfProducts = async () => {
-  return Promise.resolve({
-    data: {
-      statusCode: 200,
-      status: "Success",
-      message: "Mock products fetched",
-      products: mockProducts
-    }
-  });
-};
-
-// ✅ Dropdown (optional)
-export const productDropdown = async () => {
-  return Promise.resolve({
-    data: mockProducts.map((p) => ({ id: p.id, name: p.name }))
-  });
+  const found = mockCategories.find((c) => c.id === id);
+  return Promise.resolve({ data: found || {} });
 };
