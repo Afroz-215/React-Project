@@ -1,29 +1,18 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://e-commerce-gg46.onrender.com/api/category';
+const BASE_URL = 'https://e-commerce-gg46.onrender.com/api';
 
 export const listOfCategories = async () => {
-  try {
-    const res = await axios.post(`${BASE_URL}/listOfCategories`);
-    const raw = res?.data?.categories || [];
+  const token = localStorage.getItem('token');
 
-    const formatted = raw.map((cat, i) => ({
-      id: cat._id || cat.id || i,
-      name: cat.category_name || cat.name || `Category ${i + 1}`,
-      description: cat.description || ''
-    }));
-
-    console.log(' listOfCategories fetched:', formatted);
-    return { data: { categories: formatted } };
-  } catch (err) {
-    console.error('❌ Error fetching categories from backend:', err);
-    return { data: { categories: [] } };
-  }
+  return axios.post(`${BASE_URL}/category/listOfCategories`, {}, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 };
 
 
-
-// ✅ REAL dropdown fetch
 export const categoryDropdown = async () => {
   const res = await axios.get(`${BASE_URL}/categoryDropdown`);
   const raw = res?.data?.data || [];
@@ -37,7 +26,7 @@ export const categoryDropdown = async () => {
   return Promise.resolve({ data: formatted });
 };
 
-// ❌ MOCK only for changes
+//  MOCK only for changes
 let mockCategories = [];
 
 export const addCategory = async (formData) => {

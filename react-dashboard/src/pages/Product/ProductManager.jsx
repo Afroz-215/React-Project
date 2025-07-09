@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { listOfCategories } from '../Category/CategoryService';
 import { listProducts } from './ProductService';
+import axios from 'axios';
 
 const ProductManager = () => {
   const [products, setProducts] = useState([]);
@@ -11,15 +11,15 @@ const ProductManager = () => {
 
   const LOCAL_KEY = 'local_products';
 
+  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NDAsImVtYWlsIjoiam9obkBleGFtcGxlLmNvbSIsInJvbGUiOiJjdXN0b21lciIsImlhdCI6MTc1MjA2MDkxOCwiZXhwIjoxNzUyMTA0MTE4fQ.rZWj0viRrboW-4hthnaDskzzTiGnm3WPSU4idvBfBCk";
+
   const fetchProducts = async () => {
     try {
       const res = await listProducts();
       const backendProducts = Array.isArray(res.data.data) ? res.data.data : [];
       const localData = JSON.parse(localStorage.getItem(LOCAL_KEY)) || [];
 
-      // Combine backend + localStorage, giving priority to local edits
       const merged = [...backendProducts];
-
       localData.forEach((localProd) => {
         const index = merged.findIndex((p) => String(p._id) === String(localProd._id));
         if (index !== -1) {
@@ -37,8 +37,18 @@ const ProductManager = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await listOfCategories();
-      const raw = res?.data?.categories || [];
+      const res = await axios.post(
+        'https://e-commerce-gg46.onrender.com/api/category/listOfCategories',
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+       console.log('Fetched raw category data:', res.data);
+
+      const raw = res?.data?.data?.categories || [];
       const formatted = raw.map((cat, i) => ({
         _id: cat._id || cat.id || i,
         name: cat.name || cat.category_name || `Category ${i + 1}`,

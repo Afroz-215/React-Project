@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import CategoryDropdown from './CategoryDropdown';
 import { listOfCategories } from './CategoryService';
-import { listProducts as listOfProducts } from '../Product/ProductService'; // Correct import
+import { listProducts as listOfProducts } from '../Product/ProductService';
 
 const CategoryProduct = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
@@ -12,13 +12,11 @@ const CategoryProduct = () => {
     const fetchCategories = async () => {
       try {
         const res = await listOfCategories();
-        const raw = res?.data?.categories || [];
-
+        const raw = res?.data?.data?.categories || [];
         const formatted = raw.map((cat, i) => ({
           _id: cat._id || cat.id || i,
           name: cat.category_name || cat.name || `Category ${i + 1}`,
         }));
-
         setCategories(formatted);
       } catch (err) {
         console.error('Failed to fetch categories:', err);
@@ -31,12 +29,20 @@ const CategoryProduct = () => {
   const handleCategorySelect = async (categoryId) => {
     setSelectedCategoryId(categoryId);
 
+    const formData = {
+      page: 1,
+      pageSize: 100,
+      sortKey: 'createdAt',
+      sortValue: 'desc',
+      search: '',
+    };
+
     try {
-      const res = await listOfProducts();
+      const res = await listOfProducts(formData);
       const allProducts = res.data.products || [];
 
       const filtered = allProducts.filter(
-        (product) => product.categoryId == categoryId
+        (product) => String(product.categoryId) === String(categoryId)
       );
 
       setFilteredProducts(filtered);
@@ -63,11 +69,7 @@ const CategoryProduct = () => {
 
       <h3>Products in Selected Category</h3>
       {filteredProducts.length === 0 ? (
-        selectedCategoryId ? (
-          <p>No products found.</p>
-        ) : (
-          <p>Please select a category.</p>
-        )
+        selectedCategoryId ? <p>No products found.</p> : <p>Please select a category.</p>
       ) : (
         <ul>
           {filteredProducts.map((prod) => (

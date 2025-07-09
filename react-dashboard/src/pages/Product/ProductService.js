@@ -2,6 +2,8 @@
 import axios from 'axios';
 
 const BASE_URL = 'https://e-commerce-gg46.onrender.com/api/products';
+const token =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NDAsImVtYWlsIjoiam9obkBleGFtcGxlLmNvbSIsInJvbGUiOiJjdXN0b21lciIsImlhdCI6MTc1MjA2MDkxOCwiZXhwIjoxNzUyMTA0MTE4fQ.rZWj0viRrboW-4hthnaDskzzTiGnm3WPSU4idvBfBCk';
 
 export const addProduct = (formData) => {
   return axios.post(`${BASE_URL}/addProduct`, formData);

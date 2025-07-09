@@ -8,9 +8,12 @@ export default defineConfig({
       '/api': {
         target: 'https://e-commerce-gg46.onrender.com',
         changeOrigin: true,
+        secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api'),
       },
     },
   },
 });
+
+
 
