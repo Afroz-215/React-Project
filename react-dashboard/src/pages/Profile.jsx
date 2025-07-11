@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
+import api from '../services/axiosInstance';
+import axiosInstance from '../services/axiosInstance';
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
@@ -7,32 +8,26 @@ const Profile = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      const user = JSON.parse(localStorage.getItem('user'));
+  const fetchProfile = async () => {
+    const token = JSON.parse(localStorage.getItem('user'))?.token;
+    console.log("Token:", token);
 
-      if (!user || !user.token) {
-        setError('User not authenticated');
-        return;
-      }
+    try {
+      const res = await api.get('/viewProfile');
+      console.log('Profile data:', res.data);
+      setProfile(res.data?.data);
+    } catch (err) {
+      console.error('Failed to fetch profile:', err.response?.data || err.message);
+      setError('Failed to load profile');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      try {
-        const res = await api.get('/viewProfile', {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        });
+  fetchProfile();
+}, []);
 
-        setProfile(res.data?.data);
-      } catch (err) {
-        console.error(' Failed to fetch profile:', err);
-        setError('Failed to load profile');
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchProfile();
-  }, []);
 
   if (loading) return <p>Loading profile...</p>;
   if (error) return <p className="text-danger">{error}</p>;

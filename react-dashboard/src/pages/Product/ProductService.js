@@ -1,34 +1,60 @@
-// src/pages/Product/ProductService.js
-import axios from 'axios';
+import api from '../../services/axiosInstance';
+import { StatusCodes } from 'http-status-codes';
 
-const BASE_URL = 'https://e-commerce-gg46.onrender.com/api/products';
-const token =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NDAsImVtYWlsIjoiam9obkBleGFtcGxlLmNvbSIsInJvbGUiOiJjdXN0b21lciIsImlhdCI6MTc1MjA2MDkxOCwiZXhwIjoxNzUyMTA0MTE4fQ.rZWj0viRrboW-4hthnaDskzzTiGnm3WPSU4idvBfBCk';
 
-export const addProduct = (formData) => {
-  return axios.post(`${BASE_URL}/addProduct`, formData);
+export const PRODUCT_ADD = '/products/addProduct';
+export const PRODUCT_EDIT = '/products/editProduct';          // + /:id
+export const PRODUCT_DELETE = '/products/deleteProduct';      // + /:id
+export const PRODUCT_VIEW = '/products/viewProduct';          // + /:id
+export const PRODUCT_LIST = '/products/listOfProducts';
+export const PRODUCT_VIEW_ADMIN = '/products/productViewForAdmin'; // + /:id
+export const CATEGORY_LIST = '/products/listOfCategories';   // (if still required)
+
+
+const success = (status) =>
+  [StatusCodes.OK, StatusCodes.CREATED, StatusCodes.ACCEPTED].includes(status);
+
+
+
+export const addProduct = async (formData) => {
+  const res = await api.post(PRODUCT_ADD, formData);
+  if (success(res.status)) return res.data;
+  throw new Error(res.data?.message || 'Failed to add product');
 };
 
-export const updateProduct = (id, formData) => {
-  return axios.put(`${BASE_URL}/editProduct/${id}`, formData);
+export const updateProduct = async (id, formData) => {
+  const res = await api.put(`${PRODUCT_EDIT}/${id}`, formData);
+  if (success(res.status)) return res.data;
+  throw new Error(res.data?.message || 'Failed to update product');
 };
 
-export const deleteProduct = (id) => {
-  return axios.delete(`${BASE_URL}/deleteProduct/${id}`);
+export const deleteProduct = async (id) => {
+  const res = await api.delete(`${PRODUCT_DELETE}/${id}`);
+  if (success(res.status)) return res.data;
+  throw new Error(res.data?.message || 'Failed to delete product');
 };
 
-export const viewProduct = (id) => {
-  return axios.get(`${BASE_URL}/viewProduct/${id}`);
+export const viewProduct = async (id) => {
+  const res = await api.get(`${PRODUCT_VIEW}/${id}`);
+  if (success(res.status)) return res.data;
+  throw new Error(res.data?.message || 'Failed to view product');
 };
 
-export const listProducts = () => {
-  return axios.post(`${BASE_URL}/listOfProducts`);
+export const productViewForAdmin = async (id) => {
+  const res = await api.get(`${PRODUCT_VIEW_ADMIN}/${id}`);
+  if (success(res.status)) return res.data;
+  throw new Error(res.data?.message || 'Failed to view product (admin)');
 };
 
-export const listCategories = () => {
-  return axios.post(`${BASE_URL}/listOfCategories`);
+
+export const listProducts = async (payload = { page: 1, pageSize: 10 }) => {
+  const res = await api.post(PRODUCT_LIST, payload);
+  if (success(res.status)) return res.data;
+  throw new Error(res.data?.message || 'Failed to list products');
 };
 
-export const productViewForAdmin = (id) => {
-  return axios.get(`${BASE_URL}/productViewForAdmin/${id}`);
+export const listCategories = async () => {
+  const res = await api.post(CATEGORY_LIST);
+  if (success(res.status)) return res.data;
+  throw new Error(res.data?.message || 'Failed to list categories');
 };

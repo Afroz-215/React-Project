@@ -1,0 +1,9 @@
+export const ROUTE_LOGIN = "/";
+export const ROUTE_DASHBOARD = "/dashboard";
+export const ROUTE_FORGOT_PASSWORD = '/forget-password';
+export const ROUTE_PROFILE = "/profile";
+export const ROUTE_CHANGE_PASSWORD = "/changePassword";
+export const ROUTE_CATEGORIES = "/categories";
+export const ROUTE_CATEGORY_PRODUCTS = "/categoryProducts";
+export const ROUTE_PRODUCT_MANAGER = "/product";
+export const ROUTE_ALL_ORDERS = "/orders";

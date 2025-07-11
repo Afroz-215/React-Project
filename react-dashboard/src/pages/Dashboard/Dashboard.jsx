@@ -1,9 +1,20 @@
-// src/pages/Dashboard/Dashboard.jsx
 import React, { useEffect, useState } from 'react';
-import { getDashboardStats, getHighestPurchaseOrder, getPieChartData, getOrdersReport, getUsersReport } from './DashboardService';
-import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  getDashboardStats,
+  getHighestPurchaseOrder,
+  getPieChartData,
+  getOrdersReport,
+  getUsersReport
+} from './DashboardService';
 
-
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({});
@@ -18,21 +29,27 @@ const Dashboard = () => {
 
   const fetchAllDashboardData = async () => {
     try {
-      const [statRes, highestOrderRes, pieRes, ordersRes, usersRes] = await Promise.all([
+      const [
+        statRes,
+        highestOrderRes,
+        pieRes,
+        ordersRes,
+        usersRes
+      ] = await Promise.all([
         getDashboardStats(),
         getHighestPurchaseOrder(),
         getPieChartData(),
         getOrdersReport(),
-        getUsersReport(),
+        getUsersReport()
       ]);
 
-      setStats(statRes?.data || {});
-      setHighestOrder(highestOrderRes?.data || {});
-      setPieData(pieRes?.data || []);
-      setOrdersReport(ordersRes?.data || []);
-      setUsersReport(usersRes?.data || []);
+      setStats(statRes || {});
+      setHighestOrder(highestOrderRes || {});
+      setPieData(pieRes || []);
+      setOrdersReport(ordersRes || []);
+      setUsersReport(usersRes || []);
     } catch (err) {
-      console.error('Dashboard load error:', err);
+      console.error('Dashboard load error:', err.message);
     }
   };
 
@@ -90,69 +107,68 @@ const Dashboard = () => {
       </div>
 
       {/* Orders Report Table */}
-<div className="bg-white p-4 shadow rounded mb-4">
-  <h3>Orders Report</h3>
-  {ordersReport.length > 0 ? (
-    <div className="table-responsive">
-      <table className="table table-bordered table-striped">
-        <thead className="table-light">
-          <tr>
-            <th>Order ID</th>
-            <th>User</th>
-            <th>Total</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ordersReport.map((order) => (
-            <tr key={order._id}>
-              <td>{order._id}</td>
-              <td>{order.user?.name || 'N/A'}</td>
-              <td>₹{order.total_price}</td>
-              <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  ) : (
-    <p>No orders found</p>
-  )}
-</div>
+      <div className="bg-white p-4 shadow rounded mb-4">
+        <h3>Orders Report</h3>
+        {ordersReport.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="table-auto w-full border">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="border p-2">Order ID</th>
+                  <th className="border p-2">User</th>
+                  <th className="border p-2">Total</th>
+                  <th className="border p-2">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ordersReport.map((order) => (
+                  <tr key={order._id}>
+                    <td className="border p-2">{order._id}</td>
+                    <td className="border p-2">{order.user?.name || 'N/A'}</td>
+                    <td className="border p-2">₹{order.total_price}</td>
+                    <td className="border p-2">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p>No orders found</p>
+        )}
+      </div>
 
-{/* Users Report Table */}
-<div className="bg-white p-4 shadow rounded mb-4">
-  <h3>Users Report</h3>
-  {usersReport.length > 0 ? (
-    <div className="table-responsive">
-      <table className="table table-bordered table-striped">
-        <thead className="table-light">
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Order Count</th>
-          </tr>
-        </thead>
-        <tbody>
-          {usersReport.map((user) => (
-            <tr key={user._id}>
-              <td>{user.name}</td>
-              <td>{user.email}</td>
-              <td>{user.phone || 'N/A'}</td>
-              <td>{user.orderCount}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  ) : (
-    <p>No users found</p>
-  )}
-</div>
-
-
-
+      {/* Users Report Table */}
+      <div className="bg-white p-4 shadow rounded mb-4">
+        <h3>Users Report</h3>
+        {usersReport.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="table-auto w-full border">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="border p-2">Name</th>
+                  <th className="border p-2">Email</th>
+                  <th className="border p-2">Phone</th>
+                  <th className="border p-2">Order Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usersReport.map((user) => (
+                  <tr key={user._id}>
+                    <td className="border p-2">{user.name}</td>
+                    <td className="border p-2">{user.email}</td>
+                    <td className="border p-2">{user.phone || 'N/A'}</td>
+                    <td className="border p-2">{user.orderCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p>No users found</p>
+        )}
+      </div>
     </div>
   );
 };

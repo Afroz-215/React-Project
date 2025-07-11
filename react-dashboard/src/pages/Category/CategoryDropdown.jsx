@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { FormGroup, Label, Input, Spinner } from 'reactstrap';
-import { listOfCategories } from './CategoryService';
+import { categoryDropdown } from './CategoryService';
+import { LABEL_SELECT_CATEGORY } from '../../utils/message';
 
 const CategoryDropdown = ({
   onSelect,
   onChange,
   onLoad,
   name = 'category',
-  value,
-  label = 'Select Category',
+  value = '',
+  label = LABEL_SELECT_CATEGORY,
   showDescription = true,
 }) => {
   const [categories, setCategories] = useState([]);
@@ -18,21 +19,13 @@ const CategoryDropdown = ({
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await listOfCategories();
-        console.log("Fetched dropdown categories:", res?.data?.data?.categories);
-
-        const raw = res?.data?.data?.categories || [];
-
-        const formatted = raw.map((cat, i) => ({
-          id: cat._id || cat.id || i,
-          name: cat.category_name || cat.name || `Category ${i + 1}`,
-          description: cat.description || '',
-        }));
-
+        const formatted = await categoryDropdown();
+        console.log("Loaded categories:", formatted);
         setCategories(formatted);
-        if (onLoad) onLoad(formatted);
+        onLoad?.(formatted);
       } catch (err) {
-        console.error('Error fetching dropdown categories:', err);
+        console.error('Error fetching categories:', err);
+        setCategories([]);
       } finally {
         setLoading(false);
       }
@@ -42,13 +35,14 @@ const CategoryDropdown = ({
 
   const handleChange = (e) => {
     const selectedId = e.target.value;
+
     const selectedCategory = categories.find(
       (cat) => String(cat.id) === String(selectedId)
     );
 
     if (selectedCategory) {
       setSelectedDescription(selectedCategory.description || '');
-      onSelect?.(selectedId);
+      onSelect?.(String(selectedId)); 
     }
 
     onChange?.(e);
@@ -64,12 +58,12 @@ const CategoryDropdown = ({
           <Input
             type="select"
             name={name}
-            value={value }
+            value={value || ''}
             onChange={handleChange}
             required
           >
             <option value="" disabled>
-              Select a category
+              {LABEL_SELECT_CATEGORY}
             </option>
             {categories.map((cat, idx) => (
               <option key={cat.id || idx} value={cat.id}>
@@ -85,8 +79,6 @@ const CategoryDropdown = ({
           )}
         </>
       )}
-
-      <pre>{JSON.stringify(categories, null, 2)}</pre>
     </FormGroup>
   );
 };

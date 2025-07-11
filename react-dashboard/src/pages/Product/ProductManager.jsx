@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import axiosInstance from '../../services/axiosInstance';
 import { listProducts } from './ProductService';
-import axios from 'axios';
+import { validationMessage } from "../../utils/message";
+
+
+const LOCAL_KEY = 'local_products';
 
 const ProductManager = () => {
   const [products, setProducts] = useState([]);
@@ -8,10 +12,6 @@ const ProductManager = () => {
   const [formData, setFormData] = useState({ name: '', price: '', category: '' });
   const [editId, setEditId] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
-
-  const LOCAL_KEY = 'local_products';
-
-  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NDAsImVtYWlsIjoiam9obkBleGFtcGxlLmNvbSIsInJvbGUiOiJjdXN0b21lciIsImlhdCI6MTc1MjA2MDkxOCwiZXhwIjoxNzUyMTA0MTE4fQ.rZWj0viRrboW-4hthnaDskzzTiGnm3WPSU4idvBfBCk";
 
   const fetchProducts = async () => {
     try {
@@ -37,22 +37,14 @@ const ProductManager = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.post(
-        'https://e-commerce-gg46.onrender.com/api/category/listOfCategories',
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-       console.log('Fetched raw category data:', res.data);
-
+      const res = await axiosInstance.post('/category/listOfCategories');
       const raw = res?.data?.data?.categories || [];
+
       const formatted = raw.map((cat, i) => ({
         _id: cat._id || cat.id || i,
         name: cat.name || cat.category_name || `Category ${i + 1}`,
       }));
+
       setCategories(formatted);
     } catch (err) {
       console.error('Failed to fetch categories:', err);
@@ -130,7 +122,7 @@ const ProductManager = () => {
           onChange={handleChange}
           required
         >
-          <option value="">Select Category</option>
+          <option value="">{validationMessage('Category')}</option>
           {categories.map((cat) => (
             <option key={cat._id} value={cat._id}>
               {cat.name}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import api from '../services/api';
+import axiosInstance from '../services/axiosInstance';
 
 const ForgetPassword = () => {
   const [emailSent, setEmailSent] = useState(false);
@@ -26,6 +26,7 @@ const ForgetPassword = () => {
     try {
       setEmail(values.email);
       setEmailSent(true);
+      // Simulate sending link or verification if applicable
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to proceed');
     } finally {
@@ -34,11 +35,7 @@ const ForgetPassword = () => {
   };
 
   const handleResetPassword = async (values, { setSubmitting }) => {
-    console.log('Token in localStorage for password reset:', localStorage.getItem('token'));
-
     try {
-      const token = localStorage.getItem('token');
-
       const payload = {
         email,
         currentPassword: values.currentPassword,
@@ -46,11 +43,7 @@ const ForgetPassword = () => {
         confirmPassword: values.confirmPassword,
       };
 
-      await api.put('/user/changePassword', payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await axiosInstance.put('/user/changePassword', payload);
 
       alert('Password reset successful');
     } catch (err) {
@@ -61,7 +54,7 @@ const ForgetPassword = () => {
   };
 
   return (
-    <div className="container mt-5">
+    <div className="container mt-5" style={{ maxWidth: '500px' }}>
       <h2 className="mb-4 text-center">
         {emailSent ? 'Reset Your Password' : 'Forgot Password'}
       </h2>
@@ -101,7 +94,7 @@ const ForgetPassword = () => {
           validationSchema={passwordSchema}
           onSubmit={handleResetPassword}
         >
-          {({ isSubmitting, values, handleChange }) => (
+          {({ isSubmitting }) => (
             <Form>
               <div className="mb-3">
                 <label htmlFor="currentPassword">Current Password</label>
@@ -110,8 +103,6 @@ const ForgetPassword = () => {
                   name="currentPassword"
                   id="currentPassword"
                   className="form-control"
-                  value={values.currentPassword}
-                  onChange={handleChange}
                 />
                 <ErrorMessage name="currentPassword" component="div" className="text-danger" />
               </div>
@@ -123,8 +114,6 @@ const ForgetPassword = () => {
                   name="newPassword"
                   id="newPassword"
                   className="form-control"
-                  value={values.newPassword}
-                  onChange={handleChange}
                 />
                 <ErrorMessage name="newPassword" component="div" className="text-danger" />
               </div>
@@ -136,8 +125,6 @@ const ForgetPassword = () => {
                   name="confirmPassword"
                   id="confirmPassword"
                   className="form-control"
-                  value={values.confirmPassword}
-                  onChange={handleChange}
                 />
                 <ErrorMessage name="confirmPassword" component="div" className="text-danger" />
               </div>

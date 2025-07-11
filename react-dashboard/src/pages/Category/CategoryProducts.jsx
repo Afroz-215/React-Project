@@ -1,83 +1,91 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import CategoryDropdown from './CategoryDropdown';
-import { listOfCategories } from './CategoryService';
-import { listProducts as listOfProducts } from '../Product/ProductService';
+import { listProducts } from '../Product/ProductService';
+import {
+  LABEL_CATEGORY_PRODUCTS_PAGE,
+  LABEL_PRODUCTS_IN_SELECTED_CATEGORY,
+  MSG_NO_PRODUCTS_FOUND,
+  MSG_SELECT_CATEGORY_FIRST
+} from '../../utils/message';
 
 const CategoryProduct = () => {
-  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await listOfCategories();
-        const raw = res?.data?.data?.categories || [];
-        const formatted = raw.map((cat, i) => ({
-          _id: cat._id || cat.id || i,
-          name: cat.category_name || cat.name || `Category ${i + 1}`,
-        }));
-        setCategories(formatted);
-      } catch (err) {
-        console.error('Failed to fetch categories:', err);
-      }
-    };
-
-    fetchCategories();
-  }, []);
+  const [categoriesMap, setCategoriesMap] = useState({});
 
   const handleCategorySelect = async (categoryId) => {
-    setSelectedCategoryId(categoryId);
+    if (!categoryId) {
+      console.warn("No category selected.");
+      return;
+    }
 
-    const formData = {
+    setSelectedCategoryId(categoryId); 
+
+    const payload = {
       page: 1,
-      pageSize: 100,
-      sortKey: 'createdAt',
-      sortValue: 'desc',
+      pageSize: 10,
+      sortKey: '',
+      sortValue: '',
       search: '',
+      category_id: categoryId,
     };
 
+    console.log('Payload being sent:', JSON.stringify(payload, null, 2));
+  console.log('category_id type:', typeof payload.category_id, payload.category_id);
+
+
     try {
-      const res = await listOfProducts(formData);
-      const allProducts = res.data.products || [];
+    const res = await listProducts(payload);
+    console.log('✅ Products fetched:', res.data?.data);
+    setFilteredProducts(res.data?.data || []);
+  } catch (err) {
+    console.error('❌ Error loading products for category:', err);
 
-      const filtered = allProducts.filter(
-        (product) => String(product.categoryId) === String(categoryId)
-      );
-
-      setFilteredProducts(filtered);
-    } catch (err) {
-      console.error('Error loading products for category:', err);
+    if (err?.response) {
+      console.error('▶️ Server responded with:', err.response.status, err.response.data);
+      alert(`Server error: ${err.response.status}\n${JSON.stringify(err.response.data, null, 2)}`);
+    } else {
+      alert("Unknown error occurred. Check console.");
     }
+  }
+};
+
+  const handleCategoryLoad = (categories) => {
+    const map = {};
+    categories.forEach((cat) => {
+      map[cat.id] = cat.name;
+    });
+    setCategoriesMap(map);
   };
 
   const getCategoryName = (id) => {
-    return categories.find((cat) => String(cat._id) === String(id))?.name || 'Unknown';
+    return categoriesMap[id] || 'Unknown';
   };
 
   return (
     <div style={{ padding: '2rem' }}>
-      <h2>Category-wise Products</h2>
+      <h2>{LABEL_CATEGORY_PRODUCTS_PAGE}</h2>
 
       <CategoryDropdown
         value={selectedCategoryId}
         name="category"
         onSelect={handleCategorySelect}
+        onLoad={handleCategoryLoad}
       />
 
       <hr />
 
-      <h3>Products in Selected Category</h3>
+      <h3>{LABEL_PRODUCTS_IN_SELECTED_CATEGORY}</h3>
       {filteredProducts.length === 0 ? (
-        selectedCategoryId ? <p>No products found.</p> : <p>Please select a category.</p>
+        selectedCategoryId ? <p>{MSG_NO_PRODUCTS_FOUND}</p> : <p>{MSG_SELECT_CATEGORY_FIRST}</p>
       ) : (
         <ul>
           {filteredProducts.map((prod) => (
-            <li key={prod.id}>
-              <strong>{prod.name}</strong><br />
+            <li key={prod._id || prod.id}>
+              <strong>{prod.product_title_name || prod.name}</strong><br />
               Description: {prod.description}<br />
               Price: ₹{prod.price}<br />
-              Category: {getCategoryName(prod.categoryId)}
+              Category: {getCategoryName(prod.category_id || prod.categoryId)}
               <hr />
             </li>
           ))}
