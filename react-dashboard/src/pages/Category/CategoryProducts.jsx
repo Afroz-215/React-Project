@@ -36,13 +36,13 @@ const CategoryProduct = () => {
 
     try {
     const res = await listProducts(payload);
-    console.log('✅ Products fetched:', res.data?.data);
+    console.log('Products fetched:', res.data?.data);
     setFilteredProducts(res.data?.data || []);
   } catch (err) {
-    console.error('❌ Error loading products for category:', err);
+    console.error('Error loading products for category:', err);
 
     if (err?.response) {
-      console.error('▶️ Server responded with:', err.response.status, err.response.data);
+      console.error('Server responded with:', err.response.status, err.response.data);
       alert(`Server error: ${err.response.status}\n${JSON.stringify(err.response.data, null, 2)}`);
     } else {
       alert("Unknown error occurred. Check console.");
